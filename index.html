@@ -258,6 +258,66 @@
       opacity: 1;
     }
 
+    /* ─── Email form ─── */
+    .email-form {
+      display: flex;
+      gap: 0;
+      max-width: 420px;
+      width: 100%;
+      border: 1px solid rgba(201,146,42,0.25);
+      border-radius: 0.5rem;
+      overflow: hidden;
+      background: rgba(8,6,13,0.6);
+      backdrop-filter: blur(8px);
+      transition: border-color 250ms ease, box-shadow 250ms ease;
+    }
+    .email-form:focus-within {
+      border-color: rgba(201,146,42,0.55);
+      box-shadow: 0 0 24px rgba(255,107,26,0.1);
+    }
+    .email-form input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 0.75rem 1rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 300;
+      color: var(--text);
+      letter-spacing: 0.04em;
+    }
+    .email-form input::placeholder {
+      color: var(--muted);
+      font-style: italic;
+    }
+    .email-form button {
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--ember-1), #c94a00);
+      border: none;
+      outline: none;
+      padding: 0.75rem 1.25rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #fff;
+      cursor: pointer;
+      transition: background 200ms ease, box-shadow 200ms ease;
+    }
+    .email-form button:hover {
+      background: linear-gradient(135deg, #ff8533, var(--ember-1));
+      box-shadow: 0 0 16px rgba(255,107,26,0.35);
+    }
+    .email-form button:active { opacity: 0.85; }
+    .form-note {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      font-family: 'Inter', sans-serif;
+      margin-top: -0.5rem;
+    }
+
     /* ─── Coming soon badge ─── */
     .badge {
       display: inline-flex;
@@ -372,6 +432,13 @@
         Die. Learn. <strong>Spin again.</strong>
       </p>
     </div>
+
+    <!-- Email capture -->
+    <form class="email-form" onsubmit="return false;" aria-label="Notify me">
+      <input type="email" placeholder="your@email.com" aria-label="Email address" required />
+      <button type="submit">Notify Me</button>
+    </form>
+    <p class="form-note">No spam. Just updates when something forges.</p>
 
     <div class="badge">
       <span class="badge-pip" aria-hidden="true"></span>
