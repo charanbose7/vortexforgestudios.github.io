@@ -434,11 +434,40 @@
     </div>
 
     <!-- Email capture -->
-    <form class="email-form" onsubmit="return false;" aria-label="Notify me">
-      <input type="email" placeholder="your@email.com" aria-label="Email address" required />
-      <button type="submit">Notify Me</button>
+    <form class="email-form" method="POST" id="zcampaignOptinForm"
+      action="https://zgp4-zgp4.maillist-manage.in/weboptin.zc"
+      target="_zcSignup" onsubmit="zcScptlessSubmit(this)" aria-label="Notify me">
+      <input type="email" name="CONTACT_EMAIL" id="EMBED_FORM_EMAIL_LABEL"
+        placeholder="your@email.com" aria-label="Email address" required />
+      <button type="submit" name="SIGNUP_SUBMIT_BUTTON" id="zcWebOptin">Notify Me</button>
+      <!-- Zoho hidden fields -->
+      <input type="hidden" id="fieldBorder"            value="">
+      <input type="hidden" id="submitType"             name="submitType"    value="optinCustomView">
+      <input type="hidden" id="emailReportId"          name="emailReportId" value="">
+      <input type="hidden" id="formType"               name="formType"      value="QuickForm">
+      <input type="hidden" name="zx"                   id="cmpZuid"         value="1dfcba35ef">
+      <input type="hidden" name="zcvers"                                    value="2.0">
+      <input type="hidden" name="oldListIds"           id="allCheckedListIds" value="">
+      <input type="hidden" id="mode"                   name="mode"          value="OptinCreateView">
+      <input type="hidden" id="zcld"                   name="zcld"          value="1504b349e1e002ec">
+      <input type="hidden" id="zctd"                   name="zctd"          value="1504b349e1e00211">
+      <input type="hidden" id="document_domain"        value="">
+      <input type="hidden" id="zc_Url"                 value="zgp4-zgp4.maillist-manage.in">
+      <input type="hidden" id="new_optin_response_in"  value="0">
+      <input type="hidden" id="duplicate_optin_response_in" value="0">
+      <input type="hidden" name="zc_trackCode"         id="zc_trackCode"    value="ZCFORMVIEW">
+      <input type="hidden" id="zc_formIx"              name="zc_formIx"     value="3z68b7f650b6b1fb9c9cbcf3ac05d168861e2980b929f7a36a2c78eab647fc3755">
+      <input type="hidden" id="viewFrom"               value="URL_ACTION">
+      <input type="hidden" id="scriptless"             name="scriptless"    value="yes">
+      <input type="hidden" id="zc_spmSubmit"           name="zc_spmSubmit"  value="ZCSPMSUBMIT">
     </form>
     <p class="form-note">No spam. Just updates when something forges.</p>
+    <script>
+      function zcScptlessSubmit(parentNode) {
+        if (parentNode.querySelector("#zc_spmSubmit")) { parentNode.querySelector("#zc_spmSubmit").remove(); }
+        parentNode.submit();
+      }
+    </script>
 
     <div class="badge">
       <span class="badge-pip" aria-hidden="true"></span>
