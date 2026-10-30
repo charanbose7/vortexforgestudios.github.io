@@ -4,506 +4,1114 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vortex Forge Studios</title>
+  <meta name="description" content="Vortex Forge Studios is a small independent studio making original mobile games. Our first game, Sonarfall, is in open testing on Google Play." />
+  <meta name="theme-color" content="#07060c" />
+  <meta property="og:title" content="Vortex Forge Studios" />
+  <meta property="og:description" content="Original mobile games from a small independent studio. Play Sonarfall, now in open testing on Google Play." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://vortexforgestudios.com/" />
+  <meta property="og:image" content="https://vortexforgestudios.com/assets/sonarfall/menu.png" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+  <script>document.documentElement.classList.add('js');</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@900&family=Cinzel:wght@400;600&family=Inter:wght@300;400;500&family=Orbitron:wght@400;600&family=Chakra+Petch:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --ember-1: #FF6B1A;
-      --ember-2: #FF3D00;
+      --ember:   #FF6B1A;
       --gold:    #C9922A;
       --gold-lt: #F0C060;
-      --void:    #08060D;
-      --deep:    #0E0B18;
-      --surface: #1A1428;
-      --muted:   #6B5F82;
-      --text:    #E8DFF5;
+      --void:    #07060C;
+      --line:    rgba(201,146,42,0.2);
+      --muted:   #8A80A0;
+      --text:    #ECE6F5;
+      --sonar:   #5AD1FF;
+      --wall:    #A98BDC;
+      --exit:    #3ECF8E;
     }
 
-    html { scroll-behavior: smooth; }
-
+    html { background: var(--void); }
+    html.lenis, html.lenis body { height: auto; }
+    .lenis.lenis-smooth { scroll-behavior: auto !important; }
     body {
       background: var(--void);
       color: var(--text);
       font-family: 'Inter', sans-serif;
-      min-height: 100vh;
+      font-weight: 300;
+      line-height: 1.6;
       overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
     }
+    a { color: inherit; }
+    img { display: block; max-width: 100%; }
+    :focus-visible { outline: 2px solid var(--gold-lt); outline-offset: 3px; }
 
-    /* ─── Animated background vortex ─── */
-    .bg-vortex {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      overflow: hidden;
+    /* ─── WebGL stage ─── */
+    #gl {
+      position: fixed; inset: 0; z-index: 0;
+      width: 100vw; height: 100vh; display: block;
       pointer-events: none;
     }
-    .bg-vortex::before {
-      content: '';
-      position: absolute;
-      top: 50%; left: 50%;
-      width: 180vmax; height: 180vmax;
-      transform: translate(-50%, -50%) rotate(0deg);
-      background: conic-gradient(
-        from 0deg,
-        transparent 0%,
-        rgba(255,107,26,0.04) 15%,
-        transparent 30%,
-        rgba(201,146,42,0.03) 50%,
-        transparent 65%,
-        rgba(255,61,0,0.04) 80%,
-        transparent 100%
-      );
-      animation: spin 40s linear infinite;
+    .vignette {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(7,6,12,0.75) 100%);
     }
-    .bg-vortex::after {
-      content: '';
-      position: absolute;
-      top: 50%; left: 50%;
-      width: 120vmax; height: 120vmax;
-      transform: translate(-50%, -50%) rotate(0deg);
-      background: radial-gradient(ellipse at center,
-        rgba(255,107,26,0.08) 0%,
-        rgba(14,11,24,0.0) 60%
-      );
-      animation: pulse 6s ease-in-out infinite alternate;
-    }
-    @keyframes spin   { to { transform: translate(-50%,-50%) rotate(360deg); } }
-    @keyframes pulse  { from { opacity: 0.5; transform: translate(-50%,-50%) scale(0.9); }
-                        to   { opacity: 1;   transform: translate(-50%,-50%) scale(1.1); } }
+    .no-gl #gl { display: none; }
 
-    /* ─── Floating ember particles ─── */
-    .embers {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      overflow: hidden;
+    /* ─── Preloader ─── */
+    .loader {
+      position: fixed; inset: 0; z-index: 100;
+      display: grid; place-items: center; background: var(--void);
+      transition: opacity 900ms ease, visibility 900ms;
     }
-    .ember {
-      position: absolute;
-      bottom: -10px;
-      border-radius: 50%;
-      animation: rise linear infinite;
-      opacity: 0;
+    .loader.done { opacity: 0; visibility: hidden; }
+    .loader-inner { text-align: center; }
+    .loader-word {
+      font-family: 'Cinzel', serif; font-weight: 600; letter-spacing: 0.5em;
+      font-size: 0.8rem; color: var(--gold-lt); padding-left: 0.5em;
     }
-    @keyframes rise {
-      0%   { transform: translateY(0)   translateX(0)    scale(1);   opacity: 0; }
-      10%  { opacity: 0.8; }
-      80%  { opacity: 0.4; }
-      100% { transform: translateY(-110vh) translateX(var(--drift)) scale(0.2); opacity: 0; }
-    }
+    .loader-bar { width: 160px; height: 1px; margin: 1.1rem auto 0; background: rgba(201,146,42,0.2); overflow: hidden; }
+    .loader-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--ember), var(--gold-lt)); transition: width 300ms ease; }
 
-    /* ─── Layout ─── */
-    .site {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem 1.5rem;
+    /* ─── Chrome: nav, progress, rail ─── */
+    .progress {
+      position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 60;
+      background: linear-gradient(90deg, var(--ember), var(--gold-lt), var(--sonar));
+      transform-origin: left; transform: scaleX(0);
     }
-
-    /* ─── Nav ─── */
     nav {
-      position: fixed;
-      top: 1.25rem; left: 1.25rem; right: 1.25rem;
-      z-index: 50;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.75rem 1.5rem;
-      background: rgba(8,6,13,0.6);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(201,146,42,0.15);
-      border-radius: 0.75rem;
-    }
-    .nav-logo {
-      font-family: 'Cinzel', serif;
-      font-size: 0.85rem;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      color: var(--gold-lt);
-      text-transform: uppercase;
-    }
-    .nav-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--ember-1);
-      box-shadow: 0 0 8px var(--ember-1);
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-    @keyframes pulse-dot {
-      0%,100% { box-shadow: 0 0 6px var(--ember-1); }
-      50%      { box-shadow: 0 0 18px var(--ember-1), 0 0 30px rgba(255,107,26,0.4); }
-    }
-
-    /* ─── Hero ─── */
-    .hero {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 2rem;
-      max-width: 820px;
-      padding-top: 6rem;
-    }
-
-    .sigil {
-      width: 96px; height: 96px;
-      position: relative;
-      flex-shrink: 0;
-    }
-    .sigil svg {
-      width: 100%; height: 100%;
-      filter: drop-shadow(0 0 18px rgba(255,107,26,0.7));
-      animation: sigil-rotate 20s linear infinite;
-    }
-    @keyframes sigil-rotate {
-      0%   { filter: drop-shadow(0 0 12px rgba(255,107,26,0.5)); }
-      50%  { filter: drop-shadow(0 0 28px rgba(255,107,26,0.9)) drop-shadow(0 0 50px rgba(255,61,0,0.4)); }
-      100% { filter: drop-shadow(0 0 12px rgba(255,107,26,0.5)); }
-    }
-
-    .studio-label {
-      font-family: 'Cinzel', serif;
-      font-size: clamp(0.65rem, 1.5vw, 0.75rem);
-      letter-spacing: 0.4em;
-      color: var(--gold);
-      text-transform: uppercase;
-      opacity: 0.8;
-    }
-
-    h1 {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: clamp(2.4rem, 7vw, 5rem);
-      font-weight: 900;
-      line-height: 1.05;
-      letter-spacing: 0.02em;
-      background: linear-gradient(135deg, var(--gold-lt) 0%, var(--ember-1) 50%, var(--gold) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      filter: drop-shadow(0 2px 20px rgba(255,107,26,0.3));
-    }
-
-    .divider {
-      width: 120px;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-      opacity: 0.6;
-    }
-
-    .tagline {
-      font-family: 'Cinzel', serif;
-      font-size: clamp(0.85rem, 2vw, 1.05rem);
-      font-weight: 400;
-      letter-spacing: 0.12em;
-      color: var(--text);
-      opacity: 0.75;
-      line-height: 1.7;
-      max-width: 520px;
-    }
-
-    /* ─── The hint card ─── */
-    .hint-card {
-      margin-top: 1rem;
-      padding: 1.5rem 2rem;
-      background: rgba(26,20,40,0.7);
-      border: 1px solid rgba(201,146,42,0.2);
-      border-radius: 0.5rem;
-      backdrop-filter: blur(8px);
-      position: relative;
-      overflow: hidden;
-      cursor: default;
-      transition: border-color 250ms ease, box-shadow 250ms ease;
-      max-width: 480px;
-    }
-    .hint-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,107,26,0.06) 0%, transparent 60%);
+      position: fixed; top: 1rem; left: 1rem; right: 1rem; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      max-width: 1240px; margin: 0 auto;
       pointer-events: none;
     }
-    .hint-card:hover {
-      border-color: rgba(201,146,42,0.45);
-      box-shadow: 0 0 32px rgba(255,107,26,0.12), inset 0 0 20px rgba(255,107,26,0.04);
-    }
-    .hint-label {
-      font-family: 'Cinzel', serif;
-      font-size: 0.62rem;
-      letter-spacing: 0.35em;
-      text-transform: uppercase;
-      color: var(--ember-1);
-      margin-bottom: 0.75rem;
-      opacity: 0.9;
-    }
-    .hint-text {
-      font-size: 0.9rem;
-      line-height: 1.7;
-      color: var(--text);
-      opacity: 0.65;
-      font-style: italic;
-      font-weight: 300;
-    }
-    .hint-text strong {
+    nav > * { pointer-events: auto; }
+    .brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+    .brand svg { width: 30px; height: 30px; }
+    .brand span {
+      font-family: 'Cinzel', serif; font-weight: 600;
+      font-size: 0.8rem; letter-spacing: 0.18em; text-transform: uppercase;
       color: var(--gold-lt);
-      font-style: normal;
-      font-weight: 400;
-      opacity: 1;
     }
 
-    /* ─── Email form ─── */
-    .email-form {
-      display: flex;
-      gap: 0;
-      max-width: 420px;
-      width: 100%;
-      border: 1px solid rgba(201,146,42,0.25);
-      border-radius: 0.5rem;
+    .rail {
+      position: fixed; right: 1.4rem; top: 50%; transform: translateY(-50%); z-index: 50;
+      display: flex; flex-direction: column; gap: 0.9rem; list-style: none;
+    }
+    .rail a {
+      display: flex; align-items: center; justify-content: flex-end; gap: 0.7rem;
+      text-decoration: none; font-family: 'Cinzel', serif; font-size: 0.66rem;
+      letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);
+      padding: 0.2rem 0;
+    }
+    .rail a span { opacity: 0; transform: translateX(6px); transition: opacity 250ms ease, transform 250ms ease; }
+    .rail a i {
+      width: 7px; height: 7px; border-radius: 50%;
+      border: 1px solid rgba(201,146,42,0.6); transition: background 250ms ease, transform 250ms ease, box-shadow 250ms ease;
+    }
+    .rail a:hover span, .rail a.active span { opacity: 1; transform: none; }
+    .rail a.active { color: var(--gold-lt); }
+    .rail a.active i { background: var(--gold-lt); transform: scale(1.4); box-shadow: 0 0 10px var(--ember); }
+    body[data-chapter="sonarfall"] .rail a.active, body[data-chapter="gameplay"] .rail a.active { color: var(--sonar); }
+    body[data-chapter="sonarfall"] .rail a.active i, body[data-chapter="gameplay"] .rail a.active i { background: var(--sonar); box-shadow: 0 0 10px var(--sonar); border-color: var(--sonar); }
+    @media (max-width: 760px) { .rail { display: none; } }
+
+    /* ─── Buttons ─── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem;
+      min-height: 44px; padding: 0.7rem 1.3rem;
+      border-radius: 0.6rem; border: 1px solid transparent;
+      font-family: 'Inter', sans-serif; font-weight: 500; font-size: 0.88rem;
+      letter-spacing: 0.02em; text-decoration: none; cursor: pointer;
+      transition: background 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+    }
+    .btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .btn-sonar { background: var(--sonar); color: #04121D; }
+    .btn-sonar:hover { box-shadow: 0 0 28px rgba(90,209,255,0.55); }
+    .btn-ghost { background: rgba(7,6,12,0.5); border-color: var(--line); color: var(--text); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .btn-ghost:hover { border-color: rgba(201,146,42,0.55); }
+    .btn-line { background: rgba(7,14,26,0.5); border-color: rgba(90,209,255,0.35); color: #DDF4FF; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .btn-line:hover { border-color: var(--sonar); box-shadow: 0 0 18px rgba(90,209,255,0.3); }
+    .btn-sm { min-height: 40px; padding: 0.5rem 1rem; font-size: 0.82rem; }
+
+    /* ─── Chapters ─── */
+    main { position: relative; z-index: 1; }
+    .chapter { position: relative; height: var(--h, 300vh); }
+    .stick {
+      position: sticky; top: 0; height: 100vh; height: 100svh;
       overflow: hidden;
-      background: rgba(8,6,13,0.6);
-      backdrop-filter: blur(8px);
-      transition: border-color 250ms ease, box-shadow 250ms ease;
     }
-    .email-form:focus-within {
-      border-color: rgba(201,146,42,0.55);
-      box-shadow: 0 0 24px rgba(255,107,26,0.1);
+    .layer { position: absolute; }
+    .js [data-scrub] { opacity: 0; visibility: hidden; will-change: opacity, transform; }
+    .shadow { text-shadow: 0 2px 24px rgba(7,6,12,0.9), 0 0 2px rgba(7,6,12,0.8); }
+    .shadow h1, .shadow em { text-shadow: none; }
+
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 0.55rem;
+      font-family: 'Cinzel', serif; font-size: 0.72rem;
+      letter-spacing: 0.34em; text-transform: uppercase; color: var(--gold);
     }
-    .email-form input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      padding: 0.75rem 1rem;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.82rem;
-      font-weight: 300;
+
+    /* 01 Forge */
+    .hero-copy {
+      left: 0; right: 0; bottom: 9vh; padding: 0 1.25rem;
+      display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.9rem;
+    }
+    .hero-copy h1 {
+      font-family: 'Cinzel Decorative', serif; font-weight: 900;
+      font-size: clamp(2.3rem, 7vw, 5rem); line-height: 1.02; letter-spacing: 0.02em;
+      background: linear-gradient(135deg, var(--gold-lt) 0%, var(--ember) 55%, var(--gold) 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 4px 30px rgba(255,107,26,0.25));
+    }
+    .hero-copy p { max-width: 46ch; color: rgba(236,230,245,0.8); font-size: clamp(0.95rem, 1.6vw, 1.1rem); }
+    .scroll-hint {
+      margin-top: 0.8rem; display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+      font-family: 'Cinzel', serif; font-size: 0.62rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--muted);
+      padding-left: 0.4em;
+    }
+    .scroll-hint i { width: 1px; height: 46px; background: linear-gradient(var(--gold-lt), transparent); position: relative; overflow: hidden; }
+    .scroll-hint i::after {
+      content: ''; position: absolute; left: 0; top: -40%; width: 100%; height: 40%;
+      background: #fff; animation: drip 1.8s ease-in-out infinite;
+    }
+    @keyframes drip { to { top: 110%; } }
+
+    /* 02 Studio */
+    .studio-eyebrow { top: 16vh; left: 0; right: 0; text-align: center; }
+    .statement {
+      left: 50%; top: 50%; width: min(1000px, 92vw);
+      transform: translate(-50%, -50%);
+      text-align: center;
+      font-family: 'Cinzel', serif; font-weight: 600;
+      font-size: clamp(1.9rem, 5.4vw, 4.4rem); line-height: 1.12; letter-spacing: 0.01em;
       color: var(--text);
-      letter-spacing: 0.04em;
     }
-    .email-form input::placeholder {
-      color: var(--muted);
-      font-style: italic;
+    .statement::before {
+      content: ''; position: absolute; inset: -30% -10%; z-index: -1; pointer-events: none;
+      background: radial-gradient(ellipse at center, rgba(7,6,12,0.82) 0%, rgba(7,6,12,0.55) 45%, transparent 72%);
     }
-    .email-form button {
-      flex-shrink: 0;
-      background: linear-gradient(135deg, var(--ember-1), #c94a00);
-      border: none;
-      outline: none;
-      padding: 0.75rem 1.25rem;
-      font-family: 'Cinzel', serif;
-      font-size: 0.65rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: #fff;
-      cursor: pointer;
-      transition: background 200ms ease, box-shadow 200ms ease;
+    .statement em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--gold-lt), var(--ember));
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     }
-    .email-form button:hover {
-      background: linear-gradient(135deg, #ff8533, var(--ember-1));
-      box-shadow: 0 0 16px rgba(255,107,26,0.35);
-    }
-    .email-form button:active { opacity: 0.85; }
-    .form-note {
-      font-size: 0.65rem;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      font-family: 'Inter', sans-serif;
-      margin-top: -0.5rem;
+    .statement small {
+      display: block; margin-top: 1.4rem;
+      font-family: 'Inter', sans-serif; font-weight: 300; font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      color: rgba(236,230,245,0.72); letter-spacing: 0; line-height: 1.6;
     }
 
-    /* ─── Coming soon badge ─── */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.45rem 1.1rem;
-      border: 1px solid rgba(255,107,26,0.3);
-      border-radius: 100px;
-      font-size: 0.7rem;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--ember-1);
-      font-family: 'Cinzel', serif;
-      background: rgba(255,107,26,0.06);
+    /* 03 Sonarfall */
+    .sf-copy {
+      left: max(1.25rem, 6vw); top: 50%; width: min(520px, 44vw);
+      transform: translateY(-50%);
     }
-    .badge-pip {
-      width: 5px; height: 5px;
-      border-radius: 50%;
-      background: var(--ember-1);
-      animation: pulse-dot 1.8s ease-in-out infinite;
+    @media (max-width: 860px), (orientation: portrait) {
+      .sf-copy { left: 1.25rem; right: 1.25rem; width: auto; top: auto; bottom: 6vh; transform: none; text-align: center; }
+      .sf-copy .row { justify-content: center; }
+    }
+    .sf-status {
+      display: inline-flex; align-items: center; gap: 0.55rem;
+      padding: 0.4rem 0.9rem; border-radius: 100px;
+      border: 1px solid rgba(62,207,142,0.4); background: rgba(7,20,16,0.65);
+      font-family: 'Chakra Petch', sans-serif; font-size: 0.78rem; letter-spacing: 0.08em;
+      color: #8FF0C0; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    }
+    .pip { width: 7px; height: 7px; border-radius: 50%; background: var(--exit); box-shadow: 0 0 10px var(--exit); animation: pip 1.8s ease-in-out infinite; }
+    @keyframes pip { 50% { box-shadow: 0 0 2px var(--exit); opacity: 0.6; } }
+    .sf-title {
+      font-family: 'Orbitron', sans-serif; font-weight: 400;
+      font-size: clamp(2.2rem, 6.4vw, 4.8rem); letter-spacing: 0.26em;
+      margin: 1rem 0 0.3rem; color: #EAF8FF; white-space: nowrap;
+    }
+    .sf-title span { display: inline-block; }
+    .sf-tag { font-family: 'Chakra Petch', sans-serif; font-size: clamp(1.05rem, 2vw, 1.35rem); color: var(--sonar); margin-bottom: 0.9rem; }
+    .sf-copy p.body { color: rgba(220,236,245,0.82); margin-bottom: 1.4rem; }
+    .row { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+    .sf-note { margin-top: 1rem; font-family: 'Chakra Petch', sans-serif; font-size: 0.85rem; color: rgba(200,230,245,0.6); }
+    @media (max-width: 860px), (orientation: portrait) { .sf-copy p.body { display: none; } }
+
+    /* 04 Gameplay */
+    .gp {
+      inset: 0; display: grid; grid-template-columns: 1fr 1fr; align-items: center;
+      gap: 3rem; padding: 0 max(1.25rem, 7vw); max-width: 1240px; margin: 0 auto;
+    }
+    .gp-steps { position: relative; height: 340px; }
+    .gp-step { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); }
+    .gp-step .idx { font-family: 'Orbitron', sans-serif; font-size: 0.75rem; letter-spacing: 0.3em; color: var(--sonar); }
+    .gp-step h3 {
+      font-family: 'Chakra Petch', sans-serif; font-weight: 500;
+      font-size: clamp(2rem, 4.4vw, 3.6rem); line-height: 1.05; color: #EAF8FF; margin: 0.6rem 0 1rem;
+    }
+    .gp-step p { color: rgba(220,236,245,0.8); max-width: 42ch; font-size: clamp(0.98rem, 1.5vw, 1.1rem); }
+    .gp-step .row { margin-top: 1.4rem; }
+
+    .phone-wrap { position: relative; justify-self: center; perspective: 1400px; }
+    .phone {
+      position: relative; width: min(300px, 26vw); aspect-ratio: 9 / 16.6;
+      border-radius: 2.2rem; padding: 10px;
+      background: linear-gradient(160deg, #222A3A, #090C14);
+      border: 1px solid rgba(90,209,255,0.22);
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 80px rgba(90,209,255,0.12);
+      transform-style: preserve-3d; will-change: transform;
+    }
+    .screen { position: relative; width: 100%; height: 100%; border-radius: 1.65rem; overflow: hidden; background: #03050C; }
+    .screen img {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+      opacity: 0; transform: scale(1.06); transition: opacity 600ms ease, transform 900ms cubic-bezier(.2,.7,.2,1);
+    }
+    .screen img.on { opacity: 1; transform: none; }
+    .screen .ping {
+      position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px;
+      border-radius: 50%; border: 2px solid var(--sonar); opacity: 0; pointer-events: none;
+    }
+    .screen .ping.go { animation: screenping 900ms ease-out; }
+    @keyframes screenping { from { transform: scale(0.2); opacity: 0.9; } to { transform: scale(22); opacity: 0; } }
+    .phone-count {
+      position: absolute; left: 50%; bottom: -2.6rem; transform: translateX(-50%);
+      font-family: 'Orbitron', sans-serif; font-size: 0.72rem; letter-spacing: 0.3em; color: rgba(200,230,245,0.65);
+      display: flex; align-items: center; gap: 0.7rem; white-space: nowrap;
+    }
+    .phone-count b { color: var(--sonar); font-weight: 400; }
+    .phone-dots { display: flex; gap: 6px; }
+    .phone-dots i { width: 18px; height: 2px; background: rgba(90,209,255,0.25); transition: background 300ms; }
+    .phone-dots i.on { background: var(--sonar); }
+
+    @media (max-width: 860px), (orientation: portrait) {
+      .gp { grid-template-columns: 1fr; grid-template-rows: 1fr auto; gap: 0; padding: 5.5rem 1.25rem 2rem; text-align: center; }
+      .phone-wrap { align-self: center; }
+      .phone { width: auto; height: min(50svh, 440px); }
+      .gp-steps { height: 230px; }
+      .gp-step p { margin: 0 auto; }
+      .gp-step .row { justify-content: center; }
+      .gp-step h3 { margin: 0.4rem 0 0.6rem; }
+      .phone-count { bottom: -2rem; }
     }
 
-    /* ─── Footer ─── */
-    footer {
-      position: fixed;
-      bottom: 1.5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.65rem;
-      letter-spacing: 0.2em;
-      color: var(--muted);
-      text-transform: uppercase;
-      font-family: 'Cinzel', serif;
-      white-space: nowrap;
+    /* 05 Goal */
+    .goal-eyebrow { top: 15vh; left: 0; right: 0; text-align: center; }
+    .goal-line {
+      left: 0; right: 0; top: 62%; text-align: center; padding: 0 1.25rem;
+      font-size: clamp(1rem, 1.8vw, 1.25rem); color: rgba(236,230,245,0.85);
+    }
+    .goal-line b {
+      font-family: 'Cinzel', serif; font-weight: 600; color: var(--gold-lt);
+      font-variant-numeric: tabular-nums; letter-spacing: 0.04em;
+    }
+    .timeline {
+      left: 50%; bottom: 7vh; transform: translateX(-50%);
+      width: min(1040px, 92vw);
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+    }
+    .tl {
+      padding: 1.1rem 1.2rem; border-radius: 0.8rem;
+      border: 1px solid var(--line); background: rgba(12,10,20,0.6);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    }
+    .tl .when { font-family: 'Cinzel', serif; font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); display: flex; align-items: center; gap: 0.5rem; }
+    .tl.now .when { color: #8FF0C0; }
+    .tl h3 { font-family: 'Cinzel', serif; font-weight: 600; font-size: 1.08rem; margin: 0.35rem 0 0.3rem; }
+    .tl p { font-size: 0.88rem; color: rgba(236,230,245,0.7); }
+    @media (max-width: 760px) {
+      .goal-line { top: 52%; }
+      .timeline { grid-template-columns: 1fr; gap: 0.6rem; bottom: 4vh; }
+      .tl { padding: 0.75rem 1rem; }
+      .tl p { display: none; }
+      .tl h3 { margin: 0.2rem 0 0; font-size: 1rem; }
     }
 
+    /* 06 Contact */
+    .contact {
+      left: 50%; top: 58%; transform: translate(-50%, -50%);
+      width: min(620px, 92vw); text-align: center;
+    }
+    .contact h2 {
+      font-family: 'Cinzel', serif; font-weight: 600; font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.1; margin: 0.8rem 0 0.6rem;
+    }
+    .contact > p { color: rgba(236,230,245,0.75); margin-bottom: 1.8rem; }
+    .card {
+      display: flex; align-items: center; gap: 1.2rem; text-align: left;
+      padding: 1.3rem 1.4rem; border-radius: 1rem;
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255,107,26,0.08), transparent 55%), rgba(14,11,22,0.75);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .avatar {
+      width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+      display: grid; place-items: center;
+      font-family: 'Cinzel Decorative', serif; font-weight: 900; font-size: 1.3rem; color: var(--void);
+      background: radial-gradient(circle at 35% 30%, var(--gold-lt), var(--ember) 65%, #7A2A00);
+      box-shadow: 0 0 30px rgba(255,107,26,0.35);
+    }
+    .card h3 { font-family: 'Cinzel', serif; font-weight: 600; font-size: 1.2rem; }
+    .card .role { color: var(--gold); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 0.7rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .email-chip {
+      display: inline-flex; align-items: center; gap: 0.4rem; min-height: 40px; max-width: 100%;
+      padding: 0.3rem 0.35rem 0.3rem 0.85rem; border-radius: 0.55rem;
+      border: 1px solid var(--line); background: rgba(7,6,12,0.6); font-size: 0.86rem;
+    }
+    .email-chip a { text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .email-chip a:hover { color: var(--gold-lt); }
+    .copy {
+      border: 0; background: rgba(201,146,42,0.14); color: var(--gold-lt);
+      border-radius: 0.4rem; padding: 0.4rem 0.6rem; font: 500 0.72rem 'Inter', sans-serif; cursor: pointer;
+    }
+    .copy:hover { background: rgba(201,146,42,0.28); }
+    @media (max-width: 520px) { .card { flex-direction: column; text-align: center; } .chips { justify-content: center; } }
+    .foot {
+      left: 0; right: 0; bottom: 1.6rem; text-align: center;
+      font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+    }
+
+    /* No-WebGL / no-JS fallbacks */
+    .no-gl body { background: radial-gradient(ellipse at 50% 30%, rgba(255,107,26,0.08), transparent 60%), var(--void); }
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation: none !important; transition: none !important; }
-    }
-    @media (max-width: 480px) {
-      .hint-card { padding: 1.25rem 1.25rem; }
-      nav { padding: 0.6rem 1rem; }
+      .scroll-hint i::after, .pip { animation: none; }
     }
   </style>
+  <noscript>
+    <style>
+      .chapter { height: auto !important; }
+      .stick { position: relative; height: auto; overflow: visible; padding: 6rem 1.25rem; display: flex; flex-direction: column; gap: 2rem; }
+      .layer, .statement, .sf-copy, .timeline, .contact { position: static !important; transform: none !important; width: auto !important; }
+      .gp { display: block; }
+      .phone-wrap { display: none; }
+      .gp-steps { height: auto; }
+      .gp-step { position: static; transform: none; margin-bottom: 2rem; }
+      .loader, #gl { display: none; }
+    </style>
+  </noscript>
 </head>
-<body>
+<body data-chapter="forge">
 
-<!-- Vortex background -->
-<div class="bg-vortex" aria-hidden="true"></div>
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader-inner">
+    <div class="loader-word">VORTEX FORGE</div>
+    <div class="loader-bar"><i id="loaderBar"></i></div>
+  </div>
+</div>
 
-<!-- Ember particles -->
-<div class="embers" aria-hidden="true" id="embers"></div>
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
 
-<!-- Nav -->
-<nav>
-  <span class="nav-logo">Vortex Forge</span>
-  <div class="nav-dot"></div>
+<nav aria-label="Site">
+  <a class="brand" href="#forge" aria-label="Vortex Forge Studios, back to top">
+    <svg viewBox="0 0 160 160" aria-hidden="true">
+      <polygon points="80,4 149,42 149,118 80,156 11,118 11,42" fill="none" stroke="#b45309" stroke-width="3" stroke-dasharray="8 6" opacity="0.6"/>
+      <polygon points="80,18 136,50 136,110 80,142 24,110 24,50" fill="#1a0800" stroke="#d97706" stroke-width="4"/>
+      <rect x="52" y="38" width="56" height="22" rx="4" fill="#d97706"/>
+      <rect x="75" y="60" width="10" height="62" rx="4" fill="#b45309"/>
+    </svg>
+    <span>Vortex Forge</span>
+  </a>
+  <a class="btn btn-sonar btn-sm" href="https://play.google.com/store/apps/details?id=com.vortexforgestudios.sonarfall" target="_blank" rel="noopener">Play Sonarfall</a>
 </nav>
 
-<!-- Main -->
-<main class="site">
-  <section class="hero">
+<ul class="rail" aria-label="Chapters">
+  <li><a href="#forge"><span>Forge</span><i></i></a></li>
+  <li><a href="#studio"><span>Studio</span><i></i></a></li>
+  <li><a href="#sonarfall"><span>Sonarfall</span><i></i></a></li>
+  <li><a href="#gameplay"><span>Gameplay</span><i></i></a></li>
+  <li><a href="#goal"><span>Goal</span><i></i></a></li>
+  <li><a href="#contact"><span>Contact</span><i></i></a></li>
+</ul>
 
-    <!-- Sigil -->
-    <div class="sigil" aria-hidden="true">
-      <svg viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Outer dashed hex ring -->
-        <polygon points="80,4 149,42 149,118 80,156 11,118 11,42"
-          fill="none" stroke="#b45309" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.55"/>
-        <!-- Inner hex filled -->
-        <polygon points="80,18 136,50 136,110 80,142 24,110 24,50"
-          fill="#1a0800" stroke="#d97706" stroke-width="2"/>
-        <!-- Hammer head -->
-        <rect x="52" y="38" width="56" height="22" rx="4" fill="#d97706"/>
-        <rect x="52" y="38" width="56" height="7"  rx="4" fill="#F0C060" opacity="0.55"/>
-        <!-- Handle centered -->
-        <rect x="75" y="60" width="10" height="62" rx="4" fill="#b45309"/>
-        <!-- Notch on head -->
-        <rect x="70" y="38" width="20" height="4" rx="2" fill="#1a0800" opacity="0.4"/>
-        <!-- Corner glow dots -->
-        <circle cx="80"  cy="4"   r="4" fill="#F0C060"/>
-        <circle cx="149" cy="42"  r="3" fill="#d97706" opacity="0.75"/>
-        <circle cx="149" cy="118" r="3" fill="#d97706" opacity="0.75"/>
-        <circle cx="80"  cy="156" r="4" fill="#F0C060" opacity="0.5"/>
-        <circle cx="11"  cy="118" r="3" fill="#d97706" opacity="0.75"/>
-        <circle cx="11"  cy="42"  r="3" fill="#d97706" opacity="0.75"/>
-        <!-- Sparks from hammer head corners -->
-        <line x1="52"  y1="38" x2="38"  y2="24" stroke="#F0C060" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="108" y1="38" x2="122" y2="24" stroke="#F0C060" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="46"  y1="46" x2="28"  y2="46" stroke="#d97706" stroke-width="1.4" stroke-linecap="round"/>
-        <line x1="114" y1="46" x2="132" y2="46" stroke="#d97706" stroke-width="1.4" stroke-linecap="round"/>
-        <line x1="80"  y1="38" x2="80"  y2="22" stroke="#F0C060" stroke-width="1"   stroke-linecap="round" opacity="0.5"/>
-      </svg>
+<main>
+
+  <!-- 01 ─ Forge: particles assemble the logo, then explode into a vortex -->
+  <section class="chapter" id="forge" style="--h: 240vh">
+    <div class="stick">
+      <div class="layer hero-copy shadow" data-scrub="0,0,0.22,0.36">
+        <span class="eyebrow">Independent mobile game studio</span>
+        <h1>Vortex Forge Studios</h1>
+        <p>Original mobile games, built from scratch by a small team.</p>
+        <div class="scroll-hint" aria-hidden="true">Scroll<i></i></div>
+      </div>
     </div>
+  </section>
 
-    <span class="studio-label">An Indie Game Studio</span>
-
-    <h1>Vortex Forge<br>Studios</h1>
-
-    <div class="divider" aria-hidden="true"></div>
-
-    <p class="tagline">
-      Forging worlds from chaos. Something is spinning in the dark — and it pays to survive.
-    </p>
-
-    <!-- Cryptic hint -->
-    <div class="hint-card" role="note" aria-label="Cryptic teaser">
-      <p class="hint-label">First Transmission</p>
-      <p class="hint-text">
-        Every spin is a <strong>run</strong>. Every symbol, a <strong>choice</strong>.<br>
-        The reels don't just decide your fate — they <strong>build it</strong>.<br>
-        Die. Learn. <strong>Spin again.</strong>
+  <!-- 02 ─ Studio: spinning vortex with statements -->
+  <section class="chapter" id="studio" style="--h: 340vh">
+    <div class="stick">
+      <div class="layer studio-eyebrow" data-scrub="0.03,0.08,0.84,0.9"><span class="eyebrow">The studio</span></div>
+      <h2 class="layer statement shadow" data-scrub="0.06,0.14,0.27,0.33">A team of <em>one to three.</em></h2>
+      <p class="layer statement shadow" data-scrub="0.35,0.43,0.55,0.61">We make <em>mobile games</em> from an empty project.</p>
+      <p class="layer statement shadow" data-scrub="0.63,0.71,0.82,0.88">No templates. No reskins.<br><em>Every game gets its own idea.</em>
+        <small>That's the whole rule. The mechanic comes first and everything else is built around it.</small>
       </p>
     </div>
+  </section>
 
-    <!-- Email capture -->
-    <form class="email-form" method="POST" id="zcampaignOptinForm"
-      action="https://zgp4-zgp4.maillist-manage.in/weboptin.zc"
-      target="_zcSignup" onsubmit="zcScptlessSubmit(this)" aria-label="Notify me">
-      <input type="email" name="CONTACT_EMAIL" id="EMBED_FORM_EMAIL_LABEL"
-        placeholder="your@email.com" aria-label="Email address" required />
-      <button type="submit" name="SIGNUP_SUBMIT_BUTTON" id="zcWebOptin">Notify Me</button>
-      <!-- Zoho hidden fields -->
-      <input type="hidden" id="fieldBorder"            value="">
-      <input type="hidden" id="submitType"             name="submitType"    value="optinCustomView">
-      <input type="hidden" id="emailReportId"          name="emailReportId" value="">
-      <input type="hidden" id="formType"               name="formType"      value="QuickForm">
-      <input type="hidden" name="zx"                   id="cmpZuid"         value="1dfcba35ef">
-      <input type="hidden" name="zcvers"                                    value="2.0">
-      <input type="hidden" name="oldListIds"           id="allCheckedListIds" value="">
-      <input type="hidden" id="mode"                   name="mode"          value="OptinCreateView">
-      <input type="hidden" id="zcld"                   name="zcld"          value="1504b349e1e002ec">
-      <input type="hidden" id="zctd"                   name="zctd"          value="1504b349e1e00211">
-      <input type="hidden" id="document_domain"        value="">
-      <input type="hidden" id="zc_Url"                 value="zgp4-zgp4.maillist-manage.in">
-      <input type="hidden" id="new_optin_response_in"  value="0">
-      <input type="hidden" id="duplicate_optin_response_in" value="0">
-      <input type="hidden" name="zc_trackCode"         id="zc_trackCode"    value="ZCFORMVIEW">
-      <input type="hidden" id="zc_formIx"              name="zc_formIx"     value="3z68b7f650b6b1fb9c9cbcf3ac05d168861e2980b929f7a36a2c78eab647fc3755">
-      <input type="hidden" id="viewFrom"               value="URL_ACTION">
-      <input type="hidden" id="scriptless"             name="scriptless"    value="yes">
-      <input type="hidden" id="zc_spmSubmit"           name="zc_spmSubmit"  value="ZCSPMSUBMIT">
-    </form>
-    <p class="form-note">No spam. Just updates when something forges.</p>
-    <script>
-      function zcScptlessSubmit(parentNode) {
-        if (parentNode.querySelector("#zc_spmSubmit")) { parentNode.querySelector("#zc_spmSubmit").remove(); }
-        parentNode.submit();
-      }
-    </script>
-
-    <div class="badge">
-      <span class="badge-pip" aria-hidden="true"></span>
-      Something comes
+  <!-- 03 ─ Sonarfall: vortex collapses into a maze revealed by a sonar sweep -->
+  <section class="chapter" id="sonarfall" style="--h: 300vh">
+    <div class="stick">
+      <div class="layer sf-copy shadow">
+        <div data-scrub="0.1,0.16,0.86,0.94"><span class="sf-status"><span class="pip" aria-hidden="true"></span>Open testing on Google Play</span></div>
+        <h2 class="sf-title" data-scrub="0.12,0.14,0.86,0.94" data-letters="0.14,0.42" aria-label="Sonarfall">SONARFALL</h2>
+        <p class="sf-tag" data-scrub="0.36,0.44,0.86,0.94">You can't see the maze. You can only listen for it.</p>
+        <p class="body" data-scrub="0.42,0.5,0.86,0.94">
+          Our first game. The walls are invisible until a sonar ping washes over them, and then they
+          fade again. You get a few pings and a ticking clock, and you find the exit from what you remember.
+        </p>
+        <div class="row" data-scrub="0.48,0.56,0.86,0.94">
+          <a class="btn btn-sonar" href="https://play.google.com/store/apps/details?id=com.vortexforgestudios.sonarfall" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.6 1.8 13.8 12 3.6 22.2c-.4-.2-.6-.6-.6-1.1V2.9c0-.5.2-.9.6-1.1Zm11.3 11.3 2.6 2.6-11.9 6.8 9.3-9.4Zm3.9-4.5 3 1.7c.8.5.8 1.8 0 2.3l-3 1.7-2.9-2.8 2.9-2.9ZM5.6 1.5l11.9 6.8-2.6 2.6-9.3-9.4Z"/></svg>
+            Get it on Google Play
+          </a>
+          <a class="btn btn-line" href="https://github.com/VortexForgeStudios/Sonarfall" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <p class="sf-note" data-scrub="0.54,0.62,0.86,0.94">Built with zero art or sound files. Everything is generated in code.</p>
+      </div>
     </div>
+  </section>
 
+  <!-- 04 ─ Gameplay: pinned phone, steps swap as you scroll -->
+  <section class="chapter" id="gameplay" style="--h: 440vh">
+    <div class="stick">
+      <div class="layer gp">
+        <div class="gp-steps">
+          <div class="gp-step shadow" data-scrub="0.04,0.1,0.22,0.27">
+            <span class="idx">01 · PING</span>
+            <h3>Ping to see</h3>
+            <p>The walls are invisible until a sonar ping crosses them. Pings are scarce, so every one is a decision.</p>
+          </div>
+          <div class="gp-step shadow" data-scrub="0.28,0.33,0.46,0.51">
+            <span class="idx">02 · REMEMBER</span>
+            <h3>Remember the way</h3>
+            <p>The walls fade back into the dark. You have 34 seconds and three stars to drag your way to the exit from memory.</p>
+          </div>
+          <div class="gp-step shadow" data-scrub="0.52,0.57,0.7,0.75">
+            <span class="idx">03 · SURVIVE</span>
+            <h3>Clear it flawless</h3>
+            <p>Decoys show up from level 3 and the exit starts moving at level 6. Hidden bonus echoes win you back a star.</p>
+          </div>
+          <div class="gp-step shadow" data-scrub="0.76,0.81,0.93,0.98">
+            <span class="idx">04 · CONTINUE</span>
+            <h3>Keep going</h3>
+            <p>Every maze is generated fresh and the levels never end. Your progress is saved, so you pick up right where you left off.</p>
+            <div class="row">
+              <a class="btn btn-sonar btn-sm" href="https://play.google.com/store/apps/details?id=com.vortexforgestudios.sonarfall" target="_blank" rel="noopener">Download on Google Play</a>
+            </div>
+          </div>
+        </div>
+        <div class="phone-wrap" data-scrub="0,0.06,0.94,1">
+          <div class="phone" id="phone">
+            <div class="screen" id="screen">
+              <img src="assets/sonarfall/sonar-sweep.gif" alt="A sonar ping sweeping across a Sonarfall maze and revealing its walls" width="300" height="562" class="on">
+              <img src="assets/sonarfall/deep.png" alt="A Sonarfall maze at level 15 with 23 seconds left" width="1080" height="1920" loading="lazy">
+              <img src="assets/sonarfall/clear.png" alt="Level 15 clear screen with a Flawless rating" width="1080" height="1920" loading="lazy">
+              <img src="assets/sonarfall/menu.png" alt="Sonarfall main menu with Continue and Daily Maze" width="1080" height="1920" loading="lazy">
+              <span class="ping" id="screenPing"></span>
+            </div>
+          </div>
+          <div class="phone-count" aria-hidden="true"><b id="stepNum">01</b><span class="phone-dots" id="stepDots"><i class="on"></i><i></i><i></i><i></i></span>04</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 ─ Goal: particles spell 1M+ -->
+  <section class="chapter" id="goal" style="--h: 280vh">
+    <div class="stick">
+      <div class="layer goal-eyebrow" data-scrub="0.18,0.26,0.88,0.94"><span class="eyebrow">The goal</span></div>
+      <p class="layer goal-line shadow" data-scrub="0.24,0.32,0.88,0.94">
+        <b data-count="0.24,0.5,1000000">0</b> installs across our games by 2027.
+      </p>
+      <div class="layer timeline">
+        <div class="tl now" data-scrub="0.5,0.58,0.88,0.94">
+          <span class="when"><span class="pip" aria-hidden="true"></span>Now</span>
+          <h3>Sonarfall in open testing</h3>
+          <p>Live on Google Play for anyone to download while we polish it.</p>
+        </div>
+        <div class="tl" data-scrub="0.56,0.64,0.88,0.94">
+          <span class="when">By 2027</span>
+          <h3>1M+ installs</h3>
+          <p>More original mobile games, and a million installs across them.</p>
+        </div>
+        <div class="tl" data-scrub="0.62,0.7,0.88,0.94">
+          <span class="when">Next</span>
+          <h3>PC games on Steam</h3>
+          <p>Grow the studio and bring the same approach to PC.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 ─ Contact: particles reforge the logo -->
+  <section class="chapter" id="contact" style="--h: 200vh">
+    <div class="stick">
+      <div class="layer contact shadow">
+        <div data-scrub="0.4,0.5"><span class="eyebrow">Contact</span></div>
+        <h2 data-scrub="0.44,0.54">Let's talk.</h2>
+        <p data-scrub="0.48,0.58">Press, partnerships, playtesting or anything else. Email me directly.</p>
+        <div class="card" data-scrub="0.52,0.62">
+          <div class="avatar" aria-hidden="true">CB</div>
+          <div>
+            <h3>Charan Bose A</h3>
+            <p class="role">Founder, Vortex Forge Studios</p>
+            <div class="chips">
+              <span class="email-chip">
+                <a href="mailto:charan@vortexforgestudios.com">charan@vortexforgestudios.com</a>
+                <button class="copy" type="button" id="copyBtn" data-email="charan@vortexforgestudios.com">Copy</button>
+              </span>
+              <a class="btn btn-ghost btn-sm" href="https://github.com/VortexForgeStudios" target="_blank" rel="noopener">GitHub</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="layer foot" data-scrub="0.6,0.7">© 2026 Vortex Forge Studios</p>
+    </div>
   </section>
 </main>
 
-<footer>© 2026 Vortex Forge Studios</footer>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 <script>
-  // Generate ember particles
-  const container = document.getElementById('embers');
-  const count = 28;
-  for (let i = 0; i < count; i++) {
-    const e = document.createElement('div');
-    e.className = 'ember';
-    const size = Math.random() * 3 + 1.5;
-    const left = Math.random() * 100;
-    const duration = Math.random() * 14 + 10;
-    const delay = Math.random() * 15;
-    const drift = (Math.random() - 0.5) * 120;
-    const hue = Math.random() > 0.5 ? '#FF6B1A' : '#C9922A';
-    e.style.cssText = `
-      left: ${left}%;
-      width: ${size}px;
-      height: ${size}px;
-      background: ${hue};
-      box-shadow: 0 0 ${size * 2}px ${hue};
-      animation-duration: ${duration}s;
-      animation-delay: -${delay}s;
-      --drift: ${drift}px;
-    `;
-    container.appendChild(e);
+(() => {
+  const root = document.documentElement;
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const remap = (v, a, b) => clamp((v - a) / (b - a));
+  const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const loaderBar = document.getElementById('loaderBar');
+  const setLoad = v => { loaderBar.style.width = Math.round(v * 100) + '%'; };
+
+  // ─── Smooth scroll ───
+  let lenis = null;
+  if (window.Lenis && !reduceMotion) {
+    lenis = new Lenis({ lerp: 0.085, wheelMultiplier: 0.9 });
   }
+  document.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
+    const t = document.querySelector(a.getAttribute('href'));
+    if (!t) return;
+    e.preventDefault();
+    // Land a little into the chapter so its content is already visible
+    const off = a.getAttribute('href') === '#forge' ? 0 : t.offsetHeight * 0.32;
+    const y = t.offsetTop + off;
+    if (lenis) lenis.scrollTo(y, { duration: 1.6 }); else scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' });
+  }));
+
+  // ─── Chapter geometry ───
+  const chapters = [...document.querySelectorAll('.chapter')];
+  let secs = {}, vh = innerHeight;
+  function measure() {
+    vh = innerHeight;
+    chapters.forEach(el => {
+      secs[el.id] = { el, top: el.offsetTop, range: Math.max(1, el.offsetHeight - vh) };
+    });
+  }
+  const prog = id => clamp((scrollY - secs[id].top) / secs[id].range);
+
+  // ─── Scroll-scrubbed overlays ───
+  const scrubs = [...document.querySelectorAll('[data-scrub]')].map(el => ({
+    el, id: el.closest('.chapter').id, r: el.dataset.scrub.split(',').map(Number), last: -1
+  }));
+  function scrubValue(p, [a, b, c, d]) {
+    if (p < a) return 0;
+    if (p < b) return (p - a) / (b - a);
+    if (c === undefined || p <= c) return 1;
+    if (p < d) return 1 - (p - c) / (d - c);
+    return 0;
+  }
+  // Split letter-reveal titles into spans
+  const letterSets = [...document.querySelectorAll('[data-letters]')].map(el => {
+    const text = el.textContent; el.textContent = '';
+    const spans = [...text].map(ch => { const s = document.createElement('span'); s.textContent = ch; s.setAttribute('aria-hidden', 'true'); el.appendChild(s); return s; });
+    return { el, id: el.closest('.chapter').id, r: el.dataset.letters.split(',').map(Number), spans };
+  });
+  const counters = [...document.querySelectorAll('[data-count]')].map(el => ({
+    el, id: el.closest('.chapter').id, r: el.dataset.count.split(',').map(Number)
+  }));
+
+  function updateOverlays() {
+    for (const s of scrubs) {
+      const p = prog(s.id);
+      const v = scrubValue(p, s.r);
+      if (Math.abs(v - s.last) < 0.001) continue;
+      s.last = v;
+      const dir = p < s.r[1] ? 1 : -1;
+      s.el.style.opacity = v;
+      s.el.style.visibility = v < 0.01 ? 'hidden' : 'visible';
+      const base = s.el.classList.contains('statement') ? 'translate(-50%,-50%) ' : s.el.classList.contains('sf-copy') ? 'translateY(-50%) ' : s.el.classList.contains('gp-step') ? 'translateY(-50%) ' : s.el.classList.contains('timeline') ? 'translateX(-50%) ' : '';
+      if (!reduceMotion) {
+        s.el.style.transform = base + `translate3d(0, ${(1 - v) * 34 * dir}px, 0) scale(${0.97 + 0.03 * v})`;
+        if (s.el.classList.contains('statement')) s.el.style.filter = `blur(${(1 - v) * 10}px)`;
+      }
+    }
+    for (const L of letterSets) {
+      const p = prog(L.id), [a, b] = L.r, n = L.spans.length;
+      L.spans.forEach((s, i) => {
+        const start = a + (b - a) * 0.7 * (i / n);
+        const v = remap(p, start, start + (b - a) * 0.3);
+        s.style.opacity = 0.05 + 0.95 * v;
+        const glow = Math.sin(v * Math.PI);
+        s.style.textShadow = `0 0 ${10 + glow * 30}px rgba(90,209,255,${0.35 + glow * 0.6})`;
+        s.style.color = glow > 0.3 ? '#9FE6FF' : '#EAF8FF';
+      });
+    }
+    for (const c of counters) {
+      const v = ease(remap(prog(c.id), c.r[0], c.r[1]));
+      c.el.textContent = Math.round(v * c.r[2]).toLocaleString('en-US') + (v >= 1 ? '+' : '');
+    }
+  }
+
+  // ─── Gameplay phone ───
+  const shots = [...document.querySelectorAll('#screen img')];
+  const stepNum = document.getElementById('stepNum');
+  const stepDots = [...document.querySelectorAll('#stepDots i')];
+  const screenPing = document.getElementById('screenPing');
+  const phone = document.getElementById('phone');
+  let curStep = 0;
+  function updatePhone() {
+    const p = prog('gameplay');
+    const step = Math.min(3, Math.floor(remap(p, 0.02, 0.98) * 4));
+    if (step !== curStep) {
+      curStep = step;
+      shots.forEach((im, i) => im.classList.toggle('on', i === step));
+      stepDots.forEach((d, i) => d.classList.toggle('on', i <= step));
+      stepNum.textContent = '0' + (step + 1);
+      screenPing.classList.remove('go'); void screenPing.offsetWidth; screenPing.classList.add('go');
+    }
+    if (!reduceMotion) {
+      const ry = Math.sin(p * Math.PI * 4) * 8 - 6 + mouse.nx * 6;
+      const rx = 4 - mouse.ny * 5;
+      phone.style.transform = `rotateY(${ry}deg) rotateX(${rx}deg)`;
+    }
+  }
+
+  // ─── Chrome ───
+  const progressEl = document.getElementById('progress');
+  const railLinks = [...document.querySelectorAll('.rail a')];
+  let curChapter = '';
+  function updateChrome() {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    progressEl.style.transform = `scaleX(${clamp(scrollY / max)})`;
+    let active = chapters[0].id;
+    for (const el of chapters) if (scrollY + vh * 0.5 >= secs[el.id].top) active = el.id;
+    if (active !== curChapter) {
+      curChapter = active;
+      document.body.dataset.chapter = active;
+      railLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + active));
+    }
+  }
+
+  // ─── Pointer ───
+  const mouse = { x: 0, y: 0, nx: 0, ny: 0, active: false, power: 0 };
+  addEventListener('pointermove', e => {
+    mouse.nx = e.clientX / innerWidth * 2 - 1;
+    mouse.ny = -(e.clientY / innerHeight * 2 - 1);
+    mouse.active = true;
+  }, { passive: true });
+  document.addEventListener('pointerleave', () => { mouse.active = false; });
+  addEventListener('touchend', () => { mouse.active = false; }, { passive: true });
+
+  // ─── Copy email ───
+  const copyBtn = document.getElementById('copyBtn');
+  copyBtn.addEventListener('click', async () => {
+    const email = copyBtn.dataset.email;
+    try { await navigator.clipboard.writeText(email); }
+    catch { const t = document.createElement('textarea'); t.value = email; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch {} t.remove(); }
+    copyBtn.textContent = 'Copied'; setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1800);
+  });
+
+  // ═══════════════ Particle field ═══════════════
+  const isSmall = Math.min(innerWidth, innerHeight) < 700;
+  const COUNT = isSmall ? 7000 : 15000;
+  let gl = null;
+
+  function hex(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; }
+  function makeShape() { return { pos: new Float32Array(COUNT * 3), col: new Float32Array(COUNT * 3), alpha: new Float32Array(COUNT) }; }
+
+  // Sample bright pixels from an offscreen drawing into a point cloud
+  function sampleCanvas(draw, w, h, worldW, depth, alphaFn) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d', { willReadFrequently: true });
+    draw(x, w, h);
+    const data = x.getImageData(0, 0, w, h).data;
+    const pts = [];
+    for (let y = 0; y < h; y += 2) for (let i = 0; i < w; i += 2) {
+      const o = (y * w + i) * 4;
+      if (data[o + 3] > 120 && data[o] + data[o + 1] + data[o + 2] > 90) pts.push(i, y, data[o] / 255, data[o + 1] / 255, data[o + 2] / 255);
+    }
+    const s = makeShape(), n = pts.length / 5, k = worldW / w;
+    for (let p = 0; p < COUNT; p++) {
+      const q = Math.floor(Math.random() * n) * 5;
+      s.pos[p * 3] = (pts[q] - w / 2 + Math.random() * 2) * k;
+      s.pos[p * 3 + 1] = -(pts[q + 1] - h / 2 + Math.random() * 2) * k;
+      s.pos[p * 3 + 2] = (Math.random() - 0.5) * depth;
+      s.col[p * 3] = pts[q + 2]; s.col[p * 3 + 1] = pts[q + 3]; s.col[p * 3 + 2] = pts[q + 4];
+      s.alpha[p] = alphaFn ? alphaFn() : 0.85;
+    }
+    return s;
+  }
+
+  function buildLogo() {
+    return sampleCanvas((x, w) => {
+      x.scale(w / 160, w / 160);
+      x.lineJoin = 'round'; x.lineCap = 'round';
+      const hexPath = pts => { x.beginPath(); pts.forEach(([a, b], i) => i ? x.lineTo(a, b) : x.moveTo(a, b)); x.closePath(); };
+      x.setLineDash([5, 4]); x.strokeStyle = '#b45309'; x.lineWidth = 2;
+      hexPath([[80, 4], [149, 42], [149, 118], [80, 156], [11, 118], [11, 42]]); x.stroke();
+      x.setLineDash([]); x.strokeStyle = '#d97706'; x.lineWidth = 3.2;
+      hexPath([[80, 18], [136, 50], [136, 110], [80, 142], [24, 110], [24, 50]]); x.stroke();
+      x.fillStyle = '#e8870c'; x.fillRect(52, 38, 56, 22, 4);
+      x.fillStyle = '#F0C060'; x.fillRect(52, 38, 56, 8, 4);
+      x.fillStyle = '#c2610f'; x.fillRect(75, 60, 10, 62, 4);
+      [[80, 4, 4, '#F0C060'], [149, 42, 3, '#d97706'], [149, 118, 3, '#d97706'], [80, 156, 4, '#F0C060'], [11, 118, 3, '#d97706'], [11, 42, 3, '#d97706']]
+        .forEach(([a, b, r, c]) => { x.fillStyle = c; x.beginPath(); x.arc(a, b, r, 0, 7); x.fill(); });
+      x.strokeStyle = '#F0C060'; x.lineWidth = 2;
+      [[52, 38, 38, 24], [108, 38, 122, 24], [46, 46, 28, 46], [114, 46, 132, 46]].forEach(([a, b, c, d]) => { x.beginPath(); x.moveTo(a, b); x.lineTo(c, d); x.stroke(); });
+    }, 480, 480, 4.2, 0.35, () => 0.7 + Math.random() * 0.3);
+  }
+
+  function buildMillion() {
+    return sampleCanvas((x, w, h) => {
+      const g = x.createLinearGradient(0, 0, w, 0);
+      g.addColorStop(0, '#F0C060'); g.addColorStop(0.55, '#FF6B1A'); g.addColorStop(1, '#F0C060');
+      x.fillStyle = g; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.font = "600 290px 'Orbitron', sans-serif";
+      x.fillText('1M+', w / 2, h / 2 + 10);
+    }, 1000, 380, 7.4, 0.3, () => 0.75 + Math.random() * 0.25);
+  }
+
+  // Vortex: three spiral arms, animated each frame
+  const vort = { r: new Float32Array(COUNT), a: new Float32Array(COUNT), y: new Float32Array(COUNT) };
+  function buildVortex() {
+    const s = makeShape(), R = 4.4, core = hex('#FFE6B0'), mid = hex('#FF6B1A'), rim = hex('#C9922A'), far = hex('#7D5BB0');
+    for (let i = 0; i < COUNT; i++) {
+      const u = Math.pow(Math.random(), 0.75), r = R * (0.04 + 0.96 * u);
+      const arm = i % 3;
+      vort.r[i] = r;
+      vort.a[i] = arm * Math.PI * 2 / 3 + r * 1.25 + (Math.random() - 0.5) * (0.9 - u * 0.5);
+      vort.y[i] = (Math.random() - 0.5) * 0.5 * (1 - u * 0.8);
+      let c;
+      if (u < 0.25) { const t = u / 0.25; c = core.map((v, j) => v + (mid[j] - v) * t); }
+      else if (u < 0.75) { const t = (u - 0.25) / 0.5; c = mid.map((v, j) => v + (rim[j] - v) * t); }
+      else { const t = (u - 0.75) / 0.25; c = rim.map((v, j) => v + (far[j] - v) * t); }
+      s.col.set(c, i * 3);
+      s.alpha[i] = 0.35 + 0.6 * (1 - u * 0.7);
+    }
+    return s;
+  }
+  function animateVortex(s, t) {
+    const tilt = 1.05, ct = Math.cos(tilt), st = Math.sin(tilt);
+    for (let i = 0; i < COUNT; i++) {
+      const r = vort.r[i], a = vort.a[i] + t * 0.55 / (0.5 + r * 0.6);
+      const x = r * Math.cos(a), z = r * Math.sin(a), y = vort.y[i];
+      s.pos[i * 3] = x;
+      s.pos[i * 3 + 1] = y * ct - z * st;
+      s.pos[i * 3 + 2] = y * st + z * ct;
+    }
+  }
+
+  // Maze: points spread along wall segments, revealed by a sonar ring
+  const mazeD = new Float32Array(COUNT);
+  let mazeMaxD = 1;
+  function buildMaze() {
+    const G = isSmall ? 9 : 11, M = 6.2;
+    const cells = Array.from({ length: G * G }, () => ({ n: 1, e: 1, s: 1, w: 1, v: 0 }));
+    const at = (c, r) => cells[r * G + c];
+    const stack = [[0, G - 1]]; at(0, G - 1).v = 1;
+    while (stack.length) {
+      const [c, r] = stack[stack.length - 1], o = [];
+      if (r > 0 && !at(c, r - 1).v) o.push([c, r - 1, 'n', 's']);
+      if (r < G - 1 && !at(c, r + 1).v) o.push([c, r + 1, 's', 'n']);
+      if (c > 0 && !at(c - 1, r).v) o.push([c - 1, r, 'w', 'e']);
+      if (c < G - 1 && !at(c + 1, r).v) o.push([c + 1, r, 'e', 'w']);
+      if (!o.length) { stack.pop(); continue; }
+      const [nc, nr, d, od] = o[Math.floor(Math.random() * o.length)];
+      at(c, r)[d] = 0; at(nc, nr)[od] = 0; at(nc, nr).v = 1; stack.push([nc, nr]);
+    }
+    const segs = [];
+    for (let r = 0; r <= G; r++) for (let c = 0; c < G; c++) if (r === G ? at(c, G - 1).s : at(c, r).n) segs.push([c, r, c + 1, r]);
+    for (let c = 0; c <= G; c++) for (let r = 0; r < G; r++) if (c === G ? at(G - 1, r).e : at(c, r).w) segs.push([c, r, c, r + 1]);
+    const s = makeShape(), wall = hex('#A98BDC'), k = M / G;
+    const exitN = Math.floor(COUNT * 0.012);
+    for (let i = 0; i < COUNT; i++) {
+      let x, y;
+      if (i < exitN) {
+        // glowing exit node, top-right cell
+        const a = Math.random() * 7, rr = Math.random() * 0.22 * k;
+        x = (G - 0.5) * k - M / 2 + Math.cos(a) * rr; y = M / 2 - 0.5 * k + Math.sin(a) * rr;
+        s.col.set(hex('#3ECF8E'), i * 3);
+      } else {
+        const [x1, y1, x2, y2] = segs[Math.floor(Math.random() * segs.length)], t = Math.random();
+        x = (x1 + (x2 - x1) * t) * k - M / 2 + (Math.random() - 0.5) * 0.03;
+        y = M / 2 - (y1 + (y2 - y1) * t) * k + (Math.random() - 0.5) * 0.03;
+        s.col.set(wall, i * 3);
+      }
+      s.pos[i * 3] = x; s.pos[i * 3 + 1] = y; s.pos[i * 3 + 2] = (Math.random() - 0.5) * 0.08;
+      mazeD[i] = Math.hypot(x, y);
+      mazeMaxD = Math.max(mazeMaxD, mazeD[i]);
+    }
+    s.baseCol = s.col.slice();
+    s.exitN = exitN;
+    return s;
+  }
+  const cyan = hex('#5AD1FF');
+  function animateMaze(s, R, t) {
+    const exitPulse = 0.6 + 0.4 * Math.sin(t * 3);
+    for (let i = 0; i < COUNT; i++) {
+      if (i < s.exitN) { s.alpha[i] = exitPulse; continue; }
+      const d = mazeD[i], behind = R - d;
+      let a = 0.05, f = 0;
+      if (behind >= 0) { a = 0.22 + 0.78 * Math.max(0, 1 - behind / 3.2); f = Math.max(0, 1 - behind / 0.35); }
+      s.alpha[i] = a;
+      const o = i * 3;
+      s.col[o] = s.baseCol[o] + (cyan[0] - s.baseCol[o]) * f;
+      s.col[o + 1] = s.baseCol[o + 1] + (cyan[1] - s.baseCol[o + 1]) * f;
+      s.col[o + 2] = s.baseCol[o + 2] + (cyan[2] - s.baseCol[o + 2]) * f;
+    }
+  }
+
+  // Stars: deep field matching the game's background
+  function buildStars() {
+    const s = makeShape(), a = hex('#DDEBFF'), b = hex('#5AD1FF'), c = hex('#A98BDC');
+    for (let i = 0; i < COUNT; i++) {
+      s.pos[i * 3] = (Math.random() - 0.5) * 22;
+      s.pos[i * 3 + 1] = (Math.random() - 0.5) * 14;
+      s.pos[i * 3 + 2] = -Math.random() * 12 + 2;
+      const r = Math.random();
+      s.col.set(r < 0.7 ? a : r < 0.9 ? b : c, i * 3);
+      s.alpha[i] = 0.15 + Math.random() * 0.55;
+    }
+    s.base = s.pos.slice();
+    return s;
+  }
+  function animateStars(s, t) {
+    const a = t * 0.018, ca = Math.cos(a), sa = Math.sin(a);
+    for (let i = 0; i < COUNT; i++) {
+      const x = s.base[i * 3], y = s.base[i * 3 + 1];
+      s.pos[i * 3] = x * ca - y * sa;
+      s.pos[i * 3 + 1] = x * sa + y * ca;
+    }
+  }
+
+  function initGL() {
+    if (!window.THREE) throw new Error('three missing');
+    const canvas = document.getElementById('gl');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: 'high-performance' });
+    const pr = Math.min(devicePixelRatio || 1, 2);
+    renderer.setPixelRatio(pr);
+    renderer.setSize(innerWidth, innerHeight, false);
+    renderer.setClearColor(0x07060c, 1);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+    camera.position.set(0, 0, 10);
+
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(COUNT * 3), col = new Float32Array(COUNT * 3), alp = new Float32Array(COUNT), siz = new Float32Array(COUNT);
+    for (let i = 0; i < COUNT; i++) siz[i] = 0.55 + Math.random() * 0.9;
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('alpha', new THREE.BufferAttribute(alp, 1).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('size', new THREE.BufferAttribute(siz, 1));
+    const mat = new THREE.ShaderMaterial({
+      uniforms: { uScale: { value: (isSmall ? 24 : 30) * pr } },
+      vertexShader: `
+        attribute vec3 color; attribute float alpha; attribute float size;
+        uniform float uScale; varying vec3 vC; varying float vA;
+        void main() {
+          vC = color; vA = alpha;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = size * uScale / -mv.z;
+          gl_Position = projectionMatrix * mv;
+        }`,
+      fragmentShader: `
+        varying vec3 vC; varying float vA;
+        void main() {
+          float d = length(gl_PointCoord - 0.5);
+          float a = smoothstep(0.5, 0.0, d);
+          gl_FragColor = vec4(vC * (0.8 + a * 0.6), vA * a);
+        }`,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+    });
+    const points = new THREE.Points(geo, mat);
+    points.frustumCulled = false;
+    scene.add(points);
+
+    // Sonar ring
+    const ringGeo = new THREE.BufferGeometry().setFromPoints(Array.from({ length: 129 }, (_, i) => { const a = i / 128 * Math.PI * 2; return new THREE.Vector3(Math.cos(a), Math.sin(a), 0); }));
+    const ringMat = new THREE.LineBasicMaterial({ color: 0x5AD1FF, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
+    const ring = new THREE.LineLoop(ringGeo, ringMat);
+    scene.add(ring);
+
+    return { renderer, scene, camera, geo, pos, col, alp, ring, ringMat };
+  }
+
+  // Layout per shape: scale + offset in world units depending on viewport
+  let viewW = 10, viewH = 10, layouts = [];
+  function computeLayouts() {
+    viewH = 2 * 10 * Math.tan(25 * Math.PI / 180);
+    viewW = viewH * innerWidth / innerHeight;
+    const portrait = innerWidth < 860 || innerHeight > innerWidth;
+    layouts = [
+      { s: Math.min(viewW * 0.62 / 4.2, viewH * 0.4 / 4.2), x: 0, y: viewH * 0.17, spin: true },                // 0 logo
+      { s: Math.min(1.15, viewW * 0.95 / 8.8), x: 0, y: 0 },                                                       // 1 vortex
+      portrait ? { s: viewW * 0.84 / 6.2, x: 0, y: viewH * 0.17 }
+               : { s: Math.min(1, viewH * 0.78 / 6.2), x: viewW * 0.2, y: 0 },                                      // 2 maze
+      { s: 1, x: 0, y: 0 },                                                                                         // 3 stars
+      { s: Math.min(1, viewW * 0.84 / 7.4), x: 0, y: portrait ? viewH * 0.1 : viewH * 0.07 },                       // 4 1M+
+      { s: Math.min(0.55, viewW * 0.4 / 4.2), x: 0, y: portrait ? viewH * 0.3 : viewH * 0.29, spin: true },       // 5 logo again
+    ];
+  }
+
+  // Scroll → stage (0 logo, 1 vortex, 2 maze, 3 stars, 4 1M+, 5 logo)
+  function stageFromScroll() {
+    const F = secs.forge, S = secs.studio, N = secs.sonarfall, G = secs.gameplay, O = secs.goal, C = secs.contact;
+    const K = [
+      [F.top, 0], [F.top + F.range * 0.3, 0], [F.top + F.range, 1],
+      [S.top + S.range * 0.88, 1], [N.top + N.range * 0.1, 2],
+      [N.top + N.range * 0.86, 2], [G.top + G.range * 0.05, 3],
+      [G.top + G.range * 0.95, 3], [O.top + O.range * 0.2, 4],
+      [O.top + O.range * 0.88, 4], [C.top + C.range * 0.42, 5]
+    ];
+    const y = scrollY;
+    if (y <= K[0][0]) return 0;
+    for (let i = 1; i < K.length; i++) if (y <= K[i][0]) return K[i - 1][1] + (K[i][1] - K[i - 1][1]) * remap(y, K[i - 1][0], K[i][0]);
+    return 5;
+  }
+
+  let shapes, delay, burstDir;
+  async function buildShapes() {
+    try { await Promise.race([document.fonts.load("600 120px 'Orbitron'"), new Promise(r => setTimeout(r, 2500))]); } catch {}
+    setLoad(0.3);
+    const logo = buildLogo(); setLoad(0.45);
+    const vortex = buildVortex(); setLoad(0.6);
+    const maze = buildMaze(); setLoad(0.75);
+    const stars = buildStars(); setLoad(0.85);
+    const million = buildMillion(); setLoad(1);
+    shapes = [logo, vortex, maze, stars, million, logo];
+    delay = new Float32Array(COUNT); burstDir = new Float32Array(COUNT * 3);
+    for (let i = 0; i < COUNT; i++) {
+      delay[i] = Math.random() * 0.35;
+      const th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1), m = 1.2 + Math.random() * 2.8;
+      burstDir[i * 3] = Math.sin(ph) * Math.cos(th) * m;
+      burstDir[i * 3 + 1] = Math.sin(ph) * Math.sin(th) * m;
+      burstDir[i * 3 + 2] = Math.cos(ph) * m;
+    }
+  }
+
+  let stageS = 0, introStart = 0;
+  function renderGL(now) {
+    const t = now / 1000;
+    const target = stageFromScroll();
+    stageS += (target - stageS) * (reduceMotion ? 1 : 0.09);
+    let A, B, f, iA, iB;
+    const introT = reduceMotion ? 1 : clamp((now - introStart) / 2600);
+    if (introT < 1 && stageS < 0.02) { iA = 3; iB = 0; f = introT; }
+    else { iA = Math.floor(stageS); iB = Math.min(5, iA + 1); f = stageS - iA; if (iA >= 5) { iA = 5; iB = 5; f = 0; } }
+    A = shapes[iA]; B = shapes[iB];
+
+    // Animate the dynamic shapes that are on screen
+    const used = new Set([iA, iB]);
+    if (used.has(1)) animateVortex(shapes[1], t);
+    if (used.has(3)) animateStars(shapes[3], t);
+    if (used.has(2)) {
+      const p = prog('sonarfall');
+      let R = remap(p, 0.08, 0.6) * (mazeMaxD + 3);
+      if (p > 0.6) R = Math.max(R, ((t * 1.6) % (mazeMaxD + 4)));
+      animateMaze(shapes[2], R, t);
+      const L = layouts[2];
+      gl.ring.scale.setScalar(Math.max(0.001, R * L.s));
+      gl.ring.position.set(L.x, L.y, 0);
+      const vis = clamp(1 - Math.abs(stageS - 2) * 3);
+      gl.ringMat.opacity = vis * 0.55 * clamp(1 - R / (mazeMaxD + 3.5));
+    } else gl.ringMat.opacity = 0;
+
+    const LA = layouts[iA], LB = layouts[iB];
+    const spinA = LA.spin ? Math.sin(t * 0.6) * 0.35 : 0, spinB = LB.spin ? Math.sin(t * 0.6) * 0.35 : 0;
+    const cA = Math.cos(spinA), sA = Math.sin(spinA), cB = Math.cos(spinB), sB = Math.sin(spinB);
+    const burst = reduceMotion ? 0 : (iA === 3 && iB === 0 ? 1.4 : 1);
+
+    // Pointer in world space
+    mouse.power += ((mouse.active ? 1 : 0) - mouse.power) * 0.08;
+    const mx = mouse.nx * viewW / 2 + gl.camera.position.x * 0.0, my = mouse.ny * viewH / 2;
+    const RR = isSmall ? 0.8 : 1.1, RR2 = RR * RR, push = 0.9 * mouse.power;
+
+    const P = gl.pos, C = gl.col, Al = gl.alp;
+    for (let i = 0; i < COUNT; i++) {
+      const o = i * 3;
+      const e = ease(clamp((f - delay[i]) / 0.65));
+      // shape A
+      let ax = A.pos[o], ay = A.pos[o + 1], az = A.pos[o + 2];
+      if (spinA) { const nx = ax * cA + az * sA; az = -ax * sA + az * cA; ax = nx; }
+      ax = ax * LA.s + LA.x; ay = ay * LA.s + LA.y; az *= LA.s;
+      // shape B
+      let bx = B.pos[o], by = B.pos[o + 1], bz = B.pos[o + 2];
+      if (spinB) { const nx = bx * cB + bz * sB; bz = -bx * sB + bz * cB; bx = nx; }
+      bx = bx * LB.s + LB.x; by = by * LB.s + LB.y; bz *= LB.s;
+
+      const b = Math.sin(Math.PI * e) * burst;
+      let x = ax + (bx - ax) * e + burstDir[o] * b;
+      let y = ay + (by - ay) * e + burstDir[o + 1] * b;
+      let z = az + (bz - az) * e + burstDir[o + 2] * b;
+
+      if (push > 0.01) {
+        const dx = x - mx, dy = y - my, d2 = dx * dx + dy * dy;
+        if (d2 < RR2) {
+          const d = Math.sqrt(d2) + 1e-4, k = (1 - d / RR); const s = k * k * push;
+          x += dx / d * s; y += dy / d * s; z += s * 0.8;
+        }
+      }
+      P[o] = x; P[o + 1] = y; P[o + 2] = z;
+      C[o] = A.col[o] + (B.col[o] - A.col[o]) * e;
+      C[o + 1] = A.col[o + 1] + (B.col[o + 1] - A.col[o + 1]) * e;
+      C[o + 2] = A.col[o + 2] + (B.col[o + 2] - A.col[o + 2]) * e;
+      Al[i] = A.alpha[i] + (B.alpha[i] - A.alpha[i]) * e;
+    }
+    gl.geo.attributes.position.needsUpdate = true;
+    gl.geo.attributes.color.needsUpdate = true;
+    gl.geo.attributes.alpha.needsUpdate = true;
+
+    // Gentle camera parallax
+    const cam = gl.camera;
+    cam.position.x += (mouse.nx * 0.45 - cam.position.x) * 0.04;
+    cam.position.y += (mouse.ny * 0.3 - cam.position.y) * 0.04;
+    cam.lookAt(0, 0, 0);
+    gl.renderer.render(gl.scene, cam);
+  }
+
+  function onResize() {
+    measure();
+    if (gl) {
+      gl.renderer.setSize(innerWidth, innerHeight, false);
+      gl.camera.aspect = innerWidth / innerHeight;
+      gl.camera.updateProjectionMatrix();
+      computeLayouts();
+    }
+    scrubs.forEach(s => { s.last = -1; });
+  }
+
+  // ─── Main loop ───
+  function frame(now) {
+    if (lenis) lenis.raf(now);
+    updateOverlays();
+    updatePhone();
+    updateChrome();
+    if (gl && shapes) renderGL(now);
+    requestAnimationFrame(frame);
+  }
+
+  async function start() {
+    measure();
+    setLoad(0.1);
+    try { gl = initGL(); computeLayouts(); }
+    catch (err) { gl = null; root.classList.add('no-gl'); }
+    if (gl) await buildShapes(); else setLoad(1);
+    addEventListener('resize', onResize);
+    introStart = performance.now() + 300;
+    setTimeout(() => document.getElementById('loader').classList.add('done'), 250);
+    requestAnimationFrame(frame);
+  }
+  start();
+})();
 </script>
 </body>
 </html>
